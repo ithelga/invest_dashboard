@@ -10,7 +10,10 @@ def load_data():
     return df_operations, df_portfolio
 
 
-def process_operations_data(df):
+def process_operations_data(df, portfolio_name=None):
+    if portfolio_name:
+        df = df[df['portfolio_name'] == portfolio_name]  # Фильтрация по брокерскому счёту
+
     tax_types = [
         'Удержание налога по дивидендам',
         'Удержание налога',
@@ -36,19 +39,23 @@ def process_operations_data(df):
         'total_coupons': payments_df[payments_df['type'] == 'Выплата купонов']['amount'].sum(),
         'total_dividends': payments_df[payments_df['type'] == 'Выплата дивидендов']['amount'].sum(),
         'total_deposits': input_output_df[input_output_df['type'] == 'Пополнение брокерского счёта']['amount'].sum(),
-        'total_withdrawals': input_output_df[input_output_df['type'] == 'Вывод денежных средств']['amount'].sum(),
+        'total_withdrawals': -1 * input_output_df[input_output_df['type'] == 'Вывод денежных средств']['amount'].sum(),
     }
 
     return total_taxes, total_commissions, payments_analytics, input_output_yearly, operations_summary
 
 
-def process_portfolio_data(df):
+
+def process_portfolio_data(df, portfolio_name=None):
+    if portfolio_name:
+        df = df[df['portfolio_name'] == portfolio_name]  # Фильтрация по брокерскому счёту
+
     df['current_value'] = df['quantity'] * df['current_price']
     df['investment_value'] = df['quantity'] * df['average_price']
 
     total_portfolio_value = df['current_value'].sum()
     total_profitability = ((df['current_value'].sum() - df['investment_value'].sum()) / df[
-        'investment_value'].sum()) * 100
+        'investment_value'].sum()) * 100 if df['investment_value'].sum() > 0 else 0
 
     detailed_data = df.groupby('type').agg(
         total_value=('current_value', 'sum')
@@ -70,3 +77,4 @@ def process_portfolio_data(df):
     ).reset_index()
 
     return detailed_data, sunburst_data, treemap_data, total_portfolio_value, total_profitability, grouped_data
+

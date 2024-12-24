@@ -45,59 +45,138 @@ def create_graph(data, asset_type):
 
 def dashboard_layout(total_portfolio_value, total_profitability, operations_summary,
                      total_taxes, total_commissions, payments_analytics,
-                     input_output_yearly, sunburst_data, treemap_data, grouped_data):
+                     input_output_yearly, sunburst_data, treemap_data, grouped_data,
+                     broker_accounts, selected_account, portfolio_name=None):
     return html.Div([
-        html.H1("Анализ инвестиционного портфеля", style={
-            'textAlign': 'center',
-            'color': 'white'
-        }),
-
-        # Плашки с метриками
         html.Div([
+            # Контейнер для заголовка и выпадающего списка
             html.Div([
-                html.H4("Текущая стоимость портфеля", style={'textAlign': 'center', 'color': '#FFFFFF'}),
-                html.Div(f"{total_portfolio_value:.2f} руб.",
-                         style={'fontSize': 20, 'fontWeight': 'bold', 'textAlign': 'center', 'color': '#FFFFFF'}),
-                html.Div(f"Доходность: {total_profitability:.2f}%",
-                         style={'fontSize': 16, 'textAlign': 'center', 'color': '#D8D8D8'})
-            ], style={'border': '1px solid #444', 'padding': 10, 'margin': 10, 'width': '18%',
-                      'display': 'inline-block',
-                      'backgroundColor': '#2A2A2A', 'borderRadius': '10px',
-                      'boxShadow': '0px 4px 10px rgba(0, 0, 0, 0.5)'}),
+                # Заголовок
+                html.H1(
+                    f"Анализ инвестиционного портфеля{f' ({portfolio_name})' if portfolio_name else ''}",
+                    style={
+                        'textAlign': 'left',
+                        'color': 'white',
+                        'margin': 0,
+                        'padding': 0,
+                        'flex': 1,
+                        'fontSize': '24px'
+                    }
+                ),
+
+                html.Div([
+                    dcc.Dropdown(
+                        id='broker-filter-dashboard',
+                        options=[{'label': account, 'value': account} for account in broker_accounts],
+                        value=selected_account,
+                        placeholder="Выберите брокерский счёт",
+                        multi=True,
+                        style={
+                            'width': '500px',
+                            'marginBottom': '20px',
+                            'borderRadius': '5px',
+                            'outline': 'none',
+                            'backgroundColor': '#2A2A2A',
+                        },
+
+                    )
+                ], style={'flex': 0, 'paddingRight': '20px'})
+
+            ], style={
+                'display': 'flex',
+                'justifyContent': 'space-around',
+                'alignItems': 'center',
+                'backgroundColor': '#2A2A2A',
+                'borderRadius': '10px',
+                'boxShadow': '0px 4px 10px rgba(0, 0, 0, 0.5)',
+                'padding': '20px',
+                'marginBottom': '20px'
+            })
+        ]),
+
+        html.Div([
 
             html.Div([
-                html.H4("Получено", style={'textAlign': 'center', 'color': '#FFFFFF'}),
-                html.Div(f"Купоны: {operations_summary['total_coupons']:.2f} руб.",
-                         style={'fontSize': 16, 'textAlign': 'center', 'color': '#D8D8D8'}),
-                html.Div(f"Дивиденды: {operations_summary['total_dividends']:.2f} руб.",
-                         style={'fontSize': 16, 'TextAlign': 'center', 'color': '#D8D8D8'})
-            ], style={'border': '1px solid #444', 'padding': 10, 'margin': 10, 'width': '18%',
-                      'display': 'inline-block',
-                      'backgroundColor': '#2A2A2A', 'borderRadius': '10px',
-                      'boxShadow': '0px 4px 10px rgba(0, 0, 0, 0.5)'}),
+                html.Div([
+                    html.Div(f"{total_portfolio_value:,.0f}".replace(",", " ") + " ₽", style={
+                        'fontSize': '32px', 'fontWeight': 'bold', 'color': '#EBC641', 'textAlign': 'center'
+                    }),
+                    html.Div("Стоимость портфеля", style={
+                        'fontSize': '18px', 'fontWeight': 'bold', 'color': '#D8D8D8', 'textAlign': 'center'
+                    })
+                ], style={'flex': 1, 'padding': '20px'}),
 
-            html.Div([
-                html.H4("Средства", style={'textAlign': 'center', 'color': '#FFFFFF'}),
-                html.Div(f"Введено: {operations_summary['total_deposits']:.2f} руб.",
-                         style={'fontSize': 16, 'textAlign': 'center', 'color': '#D8D8D8'}),
-                html.Div(f"Выведено: {operations_summary['total_withdrawals']:.2f} руб.",
-                         style={'fontSize': 16, 'textAlign': 'center', 'color': '#D8D8D8'})
-            ], style={'border': '1px solid #444', 'padding': 10, 'margin': 10, 'width': '18%',
-                      'display': 'inline-block',
-                      'backgroundColor': '#2A2A2A', 'borderRadius': '10px',
-                      'boxShadow': '0px 4px 10px rgba(0, 0, 0, 0.5)'}),
+                html.Div([
+                    html.Div(f"+{total_portfolio_value * total_profitability / 100:,.0f}".replace(",",
+                                                                                                  " ") + f" ₽ ({total_profitability:+.2f}%)",
+                             style={
+                                 'fontSize': '32px',
+                                 'fontWeight': 'bold',
+                                 'color': '#396534' if total_profitability > 0 else '#C51C33',
+                                 'textAlign': 'center'
+                             }),
+                    html.Div("Доходность", style={
+                        'fontSize': '18px', 'fontWeight': 'bold', 'color': '#D8D8D8', 'textAlign': 'center'
+                    })
+                ], style={'flex': 1, 'padding': '20px'}),
 
-            html.Div([
-                html.H4("Всего уплачено", style={'textAlign': 'center', 'color': '#FFFFFF'}),
-                html.Div(f"Налоги: {total_taxes:.2f} руб.",
-                         style={'fontSize': 16, 'textAlign': 'center', 'color': '#D8D8D8'}),
-                html.Div(f"Комиссии: {total_commissions:.2f} руб.",
-                         style={'fontSize': 16, 'textAlign': 'center', 'color': '#D8D8D8'})
-            ], style={'border': '1px solid #444', 'padding': 10, 'margin': 10, 'width': '18%',
-                      'display': 'inline-block',
-                      'backgroundColor': '#2A2A2A', 'borderRadius': '10px',
-                      'boxShadow': '0px 4px 10px rgba(0, 0, 0, 0.5)'}),
-        ], style={'display': 'flex', 'justifyContent': 'space-around', 'marginBottom': '20px'}),
+                html.Div([
+                    html.Div(
+                        f"{operations_summary['total_coupons'] + operations_summary['total_dividends']:,.0f}".replace(
+                            ",", " ") + " ₽", style={
+                            'fontSize': '32px', 'fontWeight': 'bold', 'color': '#396534', 'textAlign': 'center'
+                        }),
+                    html.Div("Купоны и дивиденды", style={
+                        'fontSize': '18px', 'fontWeight': 'bold', 'color': '#D8D8D8', 'textAlign': 'center'
+                    })
+                ], style={'flex': 1, 'padding': '20px'}),
+
+                html.Div([
+                    html.Div(f"{total_taxes + total_commissions:,.0f}".replace(",", " ") + " ₽", style={
+                        'fontSize': '32px', 'fontWeight': 'bold', 'color': '#C51C33', 'textAlign': 'center'
+                    }),
+                    html.Div("Налоги и комиссии", style={
+                        'fontSize': '18px', 'fontWeight': 'bold', 'color': '#D8D8D8', 'textAlign': 'center'
+                    })
+                ], style={'flex': 1, 'padding': '20px'}),
+
+                html.Div([
+                    html.Div([
+                        html.Span(
+                            f"{operations_summary['total_deposits']:,.0f}".replace(",", " ") + " ₽",
+                            style={
+                                'color': '#396534',
+                                'fontSize': '32px',
+                                'fontWeight': 'bold'
+                            }
+                        ),
+                        html.Span(
+                            f" / {operations_summary['total_withdrawals']:,.0f}".replace(",", " ") + " ₽",
+                            style={
+                                'color': '#C51C33',
+                                'fontSize': '32px',
+                                'fontWeight': 'bold'
+                            }
+                        ),
+                    ], style={
+                        'textAlign': 'center'
+                    }),
+                    html.Div("Пополнение / Вывод", style={
+                        'fontSize': '18px', 'fontWeight': 'bold', 'color': '#D8D8D8', 'textAlign': 'center'
+                    })
+                ], style={'flex': 1, 'padding': '20px'}),
+
+            ], style={
+                'display': 'flex',
+                'justifyContent': 'space-around',
+                'alignItems': 'center',
+                'backgroundColor': '#2A2A2A',
+                'borderRadius': '10px',
+                'boxShadow': '0px 4px 10px rgba(0, 0, 0, 0.5)',
+                'padding': '20px',
+                'marginBottom': '20px'
+            })
+        ]),
 
         html.Div([
             html.Div([
@@ -106,7 +185,7 @@ def dashboard_layout(total_portfolio_value, total_profitability, operations_summ
                         sunburst_data,
                         path=['type', 'portfolio_name'],
                         values='total_value',
-                        title='Детализация по типам активов и счетам',
+                        title='Состав портфеля по классам активов',
                         template='plotly_dark',
                         color_discrete_sequence=["#396534", "#C51C33", "#EBC641", "#AEC76B"]
                     ).update_layout(
@@ -188,7 +267,7 @@ def dashboard_layout(total_portfolio_value, total_profitability, operations_summ
                 treemap_data,
                 path=['sector', 'name'],
                 values='total_value',
-                title='Состав портфеля',
+                title='Состав портфеля по секторам',
                 template='plotly_dark',
                 color_discrete_sequence=["#396534", "#C51C33", "#EBC641", "#A20132", "#5B002B", "#A01913", "#4C1B16",
                                          "#DE451C", "#D66626", "#66600F", "#AEC76B", "#FFFFFF", "#C0C0C0", "#516D45",
@@ -203,18 +282,25 @@ def dashboard_layout(total_portfolio_value, total_profitability, operations_summ
         ),
 
         html.Div([
-            html.H4("Сравнение текущих и средних цен активов", style={'textAlign': 'center', 'color': '#FFFFFF'}),
             html.Div([
                 dcc.Graph(
-                    figure=create_graph(grouped_data[grouped_data['type'] == 'share'], 'акций')
+                    figure=create_graph(grouped_data[grouped_data['type'] == 'share'], 'акций'),
+                    style={'flexBasis': '30%'}
                 ),
                 dcc.Graph(
-                    figure=create_graph(grouped_data[grouped_data['type'] == 'bond'], 'облигаций')
+                    figure=create_graph(grouped_data[grouped_data['type'] == 'bond'], 'облигаций'),
+                    style={'flexBasis': '30%'}
                 ),
                 dcc.Graph(
-                    figure=create_graph(grouped_data[grouped_data['type'] == 'etf'], 'ETF')
+                    figure=create_graph(grouped_data[grouped_data['type'] == 'etf'], 'ETF'),
+                    style={'flexBasis': '30%'}
                 )
-            ], style={'display': 'flex', 'justifyContent': 'space-around', 'marginTop': '20px'}),
+            ], style={
+                'display': 'flex',
+                'justifyContent': 'space-between',
+                'marginTop': '20px',
+                'flexWrap': 'nowrap'
+            }),
 
             html.Div([
                 html.Div([
@@ -248,6 +334,14 @@ def dashboard_layout(total_portfolio_value, total_profitability, operations_summ
                     "Средняя цена покупки"
                 ])
             ], style={'textAlign': 'center', 'color': '#D8D8D8', 'marginTop': '20px'})
-        ], style={'backgroundColor': '#2A2A2A', 'padding': '20px', 'marginTop': '20px', 'borderRadius': '10px',
-                  'boxShadow': '0px 4px 10px rgba(0, 0, 0, 0.5)'})
-    ], style={'backgroundColor': '#222222', 'padding': '20px'})
+        ], style={
+            'backgroundColor': '#2A2A2A',
+            'padding': '20px',
+            'marginTop': '20px',
+            'borderRadius': '10px',
+            'boxShadow': '0px 4px 10px rgba(0, 0, 0, 0.5)'
+        })
+
+    ],
+        style={'backgroundColor': '#222222', 'padding': '20px'}
+    )
